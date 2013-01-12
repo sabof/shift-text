@@ -124,22 +124,26 @@
              (es--section-marking-end-of-line (point))
              arg))))
 
+;;;###autoload
 (defun es-move-text-down ()
   "Move region or the current line down."
   (interactive)
   (es--move-text-internal 1))
 
+;;;###autoload
 (defun es-move-text-up ()
   "Move region or the current line up."
   (interactive)
   (es--move-text-internal -1))
 
+;;;###autoload
 (defun es-move-text-left ()
   "Move region or the current line left."
   (interactive)
   (es--indent-rigidly-internal
    (* -1 (es--current-mode-indent-step))))
 
+;;;###autoload
 (defun es-move-text-right ()
   "Move region or the current line right."
   (interactive)
