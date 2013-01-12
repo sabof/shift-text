@@ -1,3 +1,37 @@
+;;; es-shift-text.el --- Move the region in 4 directions, in a way similar to Eclipse's
+;;; Version: 0.1
+;;; Author: sabof
+;;; URL: https://github.com/sabof/es-shift-text
+;;; Package-Requires: ((es-lib "0.1"))
+
+;;; Commentary:
+
+;; The project is hosted at https://github.com/sabof/es-shift-text
+;; The latest version, and all the relevant information can be found there.
+
+;;; License:
+
+;; This file is NOT part of GNU Emacs.
+;;
+;; This program is free software; you can redistribute it and/or
+;; modify it under the terms of the GNU General Public License as
+;; published by the Free Software Foundation; either version 2, or (at
+;; your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful, but
+;; WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+;; General Public License for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with this program ; see the file COPYING.  If not, write to
+;; the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+;; Boston, MA 02111-1307, USA.
+
+;;; Code:
+
+(require 'es-lib)
+
 (defun es--current-mode-indent-step ()
   (case major-mode
     (haskell-mode 1)
@@ -112,4 +146,6 @@
   (es--indent-rigidly-internal
    (es--current-mode-indent-step)))
 
-(provide 'es-lib-move-text)
+(provide 'es-shift-text)
+
+;;; es-shift-text.el ends here
