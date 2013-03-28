@@ -36,7 +36,7 @@
   (case major-mode
     (haskell-mode 1)
     (python-mode 4)
-    (php-mode 4)
+    (php-mode 2)
     (otherwise 2)))
 
 (defun es--section-marking-end-of-line (&optional pos)
@@ -151,5 +151,4 @@
    (es--current-mode-indent-step)))
 
 (provide 'es-shift-text)
-
 ;;; es-shift-text.el ends here
