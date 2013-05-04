@@ -1,12 +1,12 @@
-;;; es-shift-text.el --- Move the region in 4 directions, in a way similar to Eclipse's
+;;; shift-text.el --- Move the region in 4 directions, in a way similar to Eclipse's
 ;;; Version: 0.1
 ;;; Author: sabof
-;;; URL: https://github.com/sabof/es-shift-text
+;;; URL: https://github.com/sabof/shift-text
 ;;; Package-Requires: ((es-lib "0.1"))
 
 ;;; Commentary:
 
-;; The project is hosted at https://github.com/sabof/es-shift-text
+;; The project is hosted at https://github.com/sabof/shift-text
 ;; The latest version, and all the relevant information can be found there.
 
 ;;; License:
@@ -32,14 +32,11 @@
 
 (require 'es-lib)
 
-(defun es--current-mode-indent-step ()
+(defun st--current-mode-indent-step ()
   (case major-mode
-    (haskell-mode 1)
-    (python-mode 4)
-    (php-mode 2)
-    (otherwise 2)))
+    (otherwise 1)))
 
-(defun es--section-marking-end-of-line (&optional pos)
+(defun st--section-marking-end-of-line (&optional pos)
   (save-excursion
     (when pos
       (goto-char pos))
@@ -47,7 +44,7 @@
         (point)
         (min (point-max) (1+ (es-total-line-end-position))))))
 
-(defun* es--move-text-internal (arg)
+(defun* st--shift-text-internal (arg)
   (let* (( was-active (region-active-p))
          ( first-line-was-folded
            (save-excursion
@@ -59,7 +56,7 @@
                   (if was-active
                       (region-beginning)
                       (point))))
-         ( end (es--section-marking-end-of-line
+         ( end (st--section-marking-end-of-line
                 (if was-active
                     (region-end)
                     (point))))
@@ -92,13 +89,13 @@
                    (fold-dwim-hide)
                    ))))))
 
-(defun* es--indent-rigidly-internal (arg)
+(defun* st--indent-rigidly-internal (arg)
   (cond ( (region-active-p)
           (let (( start
                   (es-total-line-beginning-position
                    (region-beginning)))
                 ( end
-                  (es--section-marking-end-of-line
+                  (st--section-marking-end-of-line
                    (region-end))))
             (set-mark end)
             (goto-char start)
@@ -121,34 +118,34 @@
                 )))
         ( t (indent-rigidly
              (es-total-line-beginning-position (point))
-             (es--section-marking-end-of-line (point))
+             (st--section-marking-end-of-line (point))
              arg))))
 
 ;;;###autoload
-(defun es-move-text-down ()
+(defun shift-text-down ()
   "Move region or the current line down."
   (interactive)
-  (es--move-text-internal 1))
+  (st--shift-text-internal 1))
 
 ;;;###autoload
-(defun es-move-text-up ()
+(defun shift-text-up ()
   "Move region or the current line up."
   (interactive)
-  (es--move-text-internal -1))
+  (st--shift-text-internal -1))
 
 ;;;###autoload
-(defun es-move-text-left ()
+(defun shift-text-left ()
   "Move region or the current line left."
   (interactive)
-  (es--indent-rigidly-internal
-   (* -1 (es--current-mode-indent-step))))
+  (st--indent-rigidly-internal
+   (* -1 (st--current-mode-indent-step))))
 
 ;;;###autoload
-(defun es-move-text-right ()
+(defun shift-text-right ()
   "Move region or the current line right."
   (interactive)
-  (es--indent-rigidly-internal
-   (es--current-mode-indent-step)))
+  (st--indent-rigidly-internal
+   (st--current-mode-indent-step)))
 
-(provide 'es-shift-text)
-;;; es-shift-text.el ends here
+(provide 'shift-text)
+;;; shift-text.el ends here
