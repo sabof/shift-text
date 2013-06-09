@@ -107,7 +107,7 @@
                  ( new-indent
                    (max 0 (if (zerop rest)
                               (+ cur-column arg)
-                              (if (plusp arg)
+                              (if (cl-plusp arg)
                                   (+ cur-column rest)
                                   (- cur-column (- step rest)))))))
             (if (> new-indent cur-column)
