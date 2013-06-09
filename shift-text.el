@@ -70,7 +70,7 @@
          new-start
          difference)
     (es-total-forward-line arg)
-    (unless (equal (char-before) ?\n )
+    (unless (zerop (current-column))
       (insert ?\n ))
     (setq new-start (point)
           difference (- new-start start))
