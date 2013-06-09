@@ -1,8 +1,8 @@
 ;;; shift-text.el --- Move the region in 4 directions, in a way similar to Eclipse's
-;;; Version: 0.1
+;;; Version: 0.2
 ;;; Author: sabof
 ;;; URL: https://github.com/sabof/shift-text
-;;; Package-Requires: ((es-lib "0.1"))
+;;; Package-Requires: ((cl-lib "1.0") (es-lib "0.1"))
 
 ;;; Commentary:
 
@@ -30,7 +30,21 @@
 
 ;;; Code:
 
+(require 'cl-lib)
 (require 'es-lib)
+
+(defun st--virtualize-overlay (ov)
+  (prog1 (append (list (overlay-start ov) (overlay-end ov))
+                 (overlay-properties ov))
+    (delete-overlay ov)))
+
+(defun st--realize-overlay (ov-spec)
+  (cl-destructuring-bind
+      (start end &rest props)
+      ov-spec
+    (let ((ov (make-overlay start end)))
+      (while props (overlay-put ov (pop props) (pop props)))
+      ov)))
 
 (defun st--current-mode-indent-step ()
   (case major-mode
@@ -43,6 +57,9 @@
     (if (and (region-active-p) (equal (current-column) 0))
         (point)
         (min (point-max) (1+ (es-total-line-end-position))))))
+
+(defun st--normalize-pos (pos)
+  (min (point-max) (max (point-min) pos)))
 
 (defun* st--shift-text-internal (arg)
   (let* (( was-active (region-active-p))
@@ -60,34 +77,29 @@
                 (if was-active
                     (region-end)
                     (point))))
+         ( virtual-overlays
+           (mapcar 'st--virtualize-overlay (overlays-in start end)))
          ( text (delete-and-extract-region start end))
-         new-start)
+         new-start
+         difference)
     (es-total-forward-line arg)
-    (setq new-start (point))
+    (setq new-start (point)
+          difference (- new-start start))
     (insert text)
     (unless (equal (aref text (1- (length text)))
                    (aref "\n" 0))
       (insert "\n"))
+    (cl-dolist (ov virtual-overlays)
+      (setf (nth 0 ov) (st--normalize-pos (+ (nth 0 ov) difference)))
+      (setf (nth 1 ov) (st--normalize-pos (+ (nth 1 ov) difference))))
+    (mapc 'st--realize-overlay virtual-overlays)
     (set-mark new-start)
     (exchange-point-and-mark)
     (if (or was-active first-line-was-folded)
         (setq deactivate-mark nil
               cua--explicit-region-start nil)
         (progn (move-to-column initial-column t)
-               (deactivate-mark)))
-    (and first-line-was-folded
-         (fboundp 'fold-dwim-hide)
-         (save-excursion
-           (cond ( (memq major-mode
-                         '(lisp-mode
-                           emacs-lisp-mode
-                           lisp-interaction-mode
-                           common-lisp-mode))
-                   (fold-dwim-hide))
-                 ( (progn (goto-char (line-end-position))
-                          (equal (char-before) ?\{))
-                   (fold-dwim-hide)
-                   ))))))
+               (deactivate-mark)))))
 
 (defun* st--indent-rigidly-internal (arg)
   (cond ( (region-active-p)
@@ -114,8 +126,8 @@
             (if (> new-indent cur-column)
                 (indent-to new-indent)
                 (goto-char (+ new-indent (line-beginning-position)))
-                (delete-region (point) (line-end-position))
-                )))
+              (delete-region (point) (line-end-position))
+              )))
         ( t (indent-rigidly
              (es-total-line-beginning-position (point))
              (st--section-marking-end-of-line (point))
