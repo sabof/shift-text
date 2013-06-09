@@ -65,7 +65,7 @@
                     (region-end)
                     (point))))
          ( virtual-overlays
-           (mapcar 'es-virtualize-overlay (overlays-in start end)))
+           (mapcar 'es-preserve-overlay (overlays-in start end)))
          ( text (delete-and-extract-region start end))
          new-start
          difference)
@@ -77,9 +77,9 @@
                    (aref "\n" 0))
       (insert "\n"))
     (cl-dolist (ov virtual-overlays)
-      (setf (nth 0 ov) (st--normalize-pos (+ (nth 0 ov) difference)))
-      (setf (nth 1 ov) (st--normalize-pos (+ (nth 1 ov) difference))))
-    (mapc 'es-realize-overlay virtual-overlays)
+      (setf (nth 1 ov) (st--normalize-pos (+ (nth 1 ov) difference)))
+      (setf (nth 2 ov) (st--normalize-pos (+ (nth 2 ov) difference))))
+    (mapc 'es-restore-overlay virtual-overlays)
     (set-mark new-start)
     (exchange-point-and-mark)
     (if (or was-active first-line-was-folded)
