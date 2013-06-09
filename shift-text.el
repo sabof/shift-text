@@ -33,19 +33,6 @@
 (require 'cl-lib)
 (require 'es-lib)
 
-(defun st--virtualize-overlay (ov)
-  (prog1 (append (list (overlay-start ov) (overlay-end ov))
-                 (overlay-properties ov))
-    (delete-overlay ov)))
-
-(defun st--realize-overlay (ov-spec)
-  (cl-destructuring-bind
-      (start end &rest props)
-      ov-spec
-    (let ((ov (make-overlay start end)))
-      (while props (overlay-put ov (pop props) (pop props)))
-      ov)))
-
 (defun st--current-mode-indent-step ()
   (cl-case major-mode
     (otherwise 1)))
@@ -78,7 +65,7 @@
                     (region-end)
                     (point))))
          ( virtual-overlays
-           (mapcar 'st--virtualize-overlay (overlays-in start end)))
+           (mapcar 'es-virtualize-overlay (overlays-in start end)))
          ( text (delete-and-extract-region start end))
          new-start
          difference)
@@ -92,7 +79,7 @@
     (cl-dolist (ov virtual-overlays)
       (setf (nth 0 ov) (st--normalize-pos (+ (nth 0 ov) difference)))
       (setf (nth 1 ov) (st--normalize-pos (+ (nth 1 ov) difference))))
-    (mapc 'st--realize-overlay virtual-overlays)
+    (mapc 'es-realize-overlay virtual-overlays)
     (set-mark new-start)
     (exchange-point-and-mark)
     (if (or was-active first-line-was-folded)
