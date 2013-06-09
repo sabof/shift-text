@@ -2,7 +2,7 @@
 ;;; Version: 0.2
 ;;; Author: sabof
 ;;; URL: https://github.com/sabof/shift-text
-;;; Package-Requires: ((cl-lib "1.0") (es-lib "0.1"))
+;;; Package-Requires: ((cl-lib "1.0") (es-lib "0.3"))
 
 ;;; Commentary:
 
@@ -47,7 +47,7 @@
       ov)))
 
 (defun st--current-mode-indent-step ()
-  (case major-mode
+  (cl-case major-mode
     (otherwise 1)))
 
 (defun st--section-marking-end-of-line (&optional pos)
