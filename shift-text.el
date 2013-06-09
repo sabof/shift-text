@@ -61,7 +61,7 @@
 (defun st--normalize-pos (pos)
   (min (point-max) (max (point-min) pos)))
 
-(defun* st--shift-text-internal (arg)
+(defun st--shift-text-internal (arg)
   (let* (( was-active (region-active-p))
          ( first-line-was-folded
            (save-excursion
@@ -101,7 +101,7 @@
         (progn (move-to-column initial-column t)
                (deactivate-mark)))))
 
-(defun* st--indent-rigidly-internal (arg)
+(defun st--indent-rigidly-internal (arg)
   (cond ( (region-active-p)
           (let (( start
                   (es-total-line-beginning-position
