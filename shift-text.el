@@ -33,9 +33,7 @@
 (require 'cl-lib)
 (require 'es-lib)
 
-(defun st--current-mode-indent-step ()
-  (cl-case major-mode
-    (otherwise 1)))
+(defvar st-indent-step 1)
 
 (defun st--section-marking-end-of-line (&optional pos)
   (save-excursion
@@ -138,15 +136,13 @@
 (defun shift-text-left ()
   "Move region or the current line left."
   (interactive)
-  (st--indent-rigidly-internal
-   (* -1 (st--current-mode-indent-step))))
+  (st--indent-rigidly-internal (- st-indent-step)))
 
 ;;;###autoload
 (defun shift-text-right ()
   "Move region or the current line right."
   (interactive)
-  (st--indent-rigidly-internal
-   (st--current-mode-indent-step)))
+  (st--indent-rigidly-internal st-indent-step))
 
 (provide 'shift-text)
 ;;; shift-text.el ends here
