@@ -1,5 +1,5 @@
 ;;; shift-text.el --- Move the region in 4 directions, in a way similar to Eclipse's
-;;; Version: 0.2
+;;; Version: 0.3
 ;;; Author: sabof
 ;;; URL: https://github.com/sabof/shift-text
 ;;; Package-Requires: ((cl-lib "1.0") (es-lib "0.3"))
@@ -33,13 +33,16 @@
 (require 'cl-lib)
 (require 'es-lib)
 
-(defvar st-indent-step 1)
+(defvar st-indent-step 1
+  "How much to indent when shifting horizontally.
+Set in respective mode-hooks with `setq-local', for example
+\(setq-local st-indent-step 2\)")
 
 (defun st--section-marking-end-of-line (&optional pos)
   (save-excursion
     (when pos
       (goto-char pos))
-    (if (and (region-active-p) (equal (current-column) 0))
+    (if (and (use-region-p) (equal (current-column) 0))
         (point)
         (min (point-max) (1+ (es-total-line-end-position))))))
 
@@ -47,7 +50,7 @@
   (min (point-max) (max (point-min) pos)))
 
 (defun st--shift-text-internal (arg)
-  (let* (( was-active (region-active-p))
+  (let* (( was-active (use-region-p))
          ( first-line-was-folded
            (save-excursion
              (when was-active
@@ -89,36 +92,45 @@
                (deactivate-mark)))))
 
 (defun st--indent-rigidly-internal (arg)
-  (cond ( (region-active-p)
-          (let (( start
-                  (es-total-line-beginning-position
-                   (region-beginning)))
-                ( end
-                  (st--section-marking-end-of-line
-                   (region-end))))
-            (set-mark end)
-            (goto-char start)
-            (indent-rigidly start end arg)
-            (setq deactivate-mark nil)))
-        ( (es-line-empty-p)
-          (let* (( cur-column (current-column))
-                 ( step (abs arg))
-                 ( rest (mod cur-column step))
-                 ( new-indent
-                   (max 0 (if (zerop rest)
-                              (+ cur-column arg)
-                              (if (cl-plusp arg)
-                                  (+ cur-column rest)
-                                  (- cur-column (- step rest)))))))
-            (if (> new-indent cur-column)
-                (indent-to new-indent)
-                (goto-char (+ new-indent (line-beginning-position)))
+  (let* (( indentation-ammout
+           (* arg st-indent-step))
+         ( old-indentation
+           (save-excursion
+             (when (use-region-p)
+               (goto-char (region-beginning)))
+             (current-indentation)))
+         ( old-indentation-adujusted
+           (* st-indent-step
+              (/ old-indentation
+                 st-indent-step)))
+         ( desired-indentation
+           (+ old-indentation-adujusted
+              indentation-ammout))
+         ( new-ammount
+           (- desired-indentation old-indentation)))
+    (cond ( (use-region-p)
+            (let (( start
+                    (es-total-line-beginning-position
+                     (region-beginning)))
+                  ( end
+                    (st--section-marking-end-of-line
+                     (region-end))))
+              (set-mark end)
+              (goto-char start)
+              (indent-rigidly start end new-ammount)
+              (setq deactivate-mark nil)))
+          ( (es-line-empty-p)
+            (if (> desired-indentation old-indentation)
+                (indent-to desired-indentation)
+              (goto-char (max (line-beginning-position)
+                              (+ desired-indentation
+                                 (line-beginning-position))))
               (delete-region (point) (line-end-position))
-              )))
-        ( t (indent-rigidly
-             (es-total-line-beginning-position (point))
-             (st--section-marking-end-of-line (point))
-             arg))))
+              ))
+          ( t (indent-rigidly
+               (es-total-line-beginning-position (point))
+               (st--section-marking-end-of-line (point))
+               new-ammount)))))
 
 ;;;###autoload
 (defun shift-text-down ()
@@ -136,13 +148,13 @@
 (defun shift-text-left ()
   "Move region or the current line left."
   (interactive)
-  (st--indent-rigidly-internal (- st-indent-step)))
+  (st--indent-rigidly-internal -1))
 
 ;;;###autoload
 (defun shift-text-right ()
   "Move region or the current line right."
   (interactive)
-  (st--indent-rigidly-internal st-indent-step))
+  (st--indent-rigidly-internal 1))
 
 (provide 'shift-text)
 ;;; shift-text.el ends here
