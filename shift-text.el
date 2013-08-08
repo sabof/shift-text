@@ -33,10 +33,27 @@
 (require 'cl-lib)
 (require 'es-lib)
 
-(defvar st-indent-step 1
+(defvar st-indent-step
+  (lambda ()
+    (cond
+      ( (eq major-mode 'js-mode)
+        js-indent-level)
+      ( (eq major-mode 'css-mode)
+        css-indent-offset)
+      ( (memq major-mode
+              '(emacs-lisp-mode
+                lisp-mode
+                lisp-interaction-mode
+                scheme-mode))
+        2)
+      ( t tab-width)
+      ))
   "How much to indent when shifting horizontally.
-Set in respective mode-hooks with `setq-local', for example
-\(setq-local st-indent-step 2\)")
+
+You can set it for specific modes in their mode-hooks with `setq-local'.
+For example \(setq-local st-indent-step 2\).
+
+Can also be a function called without arguments and evaluting to a number.")
 
 (defun st--section-marking-end-of-line (&optional pos)
   (save-excursion
@@ -92,17 +109,20 @@ Set in respective mode-hooks with `setq-local', for example
                (deactivate-mark)))))
 
 (defun st--indent-rigidly-internal (arg)
-  (let* (( indentation-ammout
-           (* arg st-indent-step))
+  (let* (( indent-step (if (functionp st-indent-step)
+                           (funcall st-indent-step)
+                         st-indent-step))
+         ( indentation-ammout
+           (* arg indent-step))
          ( old-indentation
            (save-excursion
              (when (use-region-p)
                (goto-char (region-beginning)))
              (current-indentation)))
          ( old-indentation-adujusted
-           (* st-indent-step
+           (* indent-step
               (/ old-indentation
-                 st-indent-step)))
+                 indent-step)))
          ( desired-indentation
            (+ old-indentation-adujusted
               indentation-ammout))
