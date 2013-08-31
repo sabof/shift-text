@@ -55,13 +55,13 @@ For example \(setq-local st-indent-step 2\).
 
 Can also be a function called without arguments and evaluting to a number.")
 
-(defun st--section-marking-end-of-line (&optional pos)
+(defun st--section-marking-end-of-line (&optional pos using-region)
   (save-excursion
     (when pos
       (goto-char pos))
-    (if (and (use-region-p) (equal (current-column) 0))
+    (if (and using-region (equal (current-column) 0))
         (point)
-        (min (point-max) (1+ (es-total-line-end-position))))))
+      (min (point-max) (1+ (es-total-line-end-position))))))
 
 (defun st--normalize-pos (pos)
   (min (point-max) (max (point-min) pos)))
@@ -81,7 +81,8 @@ Can also be a function called without arguments and evaluting to a number.")
          ( end (st--section-marking-end-of-line
                 (if was-active
                     (region-end)
-                    (point))))
+                    (point))
+                was-active))
          ( virtual-overlays
            (mapcar 'es-preserve-overlay (overlays-in start end)))
          ( text (delete-and-extract-region start end))
@@ -105,8 +106,8 @@ Can also be a function called without arguments and evaluting to a number.")
     (if (or was-active first-line-was-folded)
         (setq deactivate-mark nil
               cua--explicit-region-start nil)
-        (progn (move-to-column initial-column t)
-               (deactivate-mark)))))
+      (progn (move-to-column initial-column t)
+             (deactivate-mark)))))
 
 (defun st--indent-rigidly-internal (arg)
   (let* (( indent-step (if (functionp st-indent-step)
@@ -134,7 +135,8 @@ Can also be a function called without arguments and evaluting to a number.")
                      (region-beginning)))
                   ( end
                     (st--section-marking-end-of-line
-                     (region-end))))
+                     (region-end)
+                     t)))
               (set-mark end)
               (goto-char start)
               (indent-rigidly start end new-ammount)
